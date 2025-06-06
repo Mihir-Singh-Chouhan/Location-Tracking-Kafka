@@ -58,4 +58,15 @@ public class LocationEntity {
     public void setTimestamp(Date timestamp) {
         this.timestamp = timestamp;
     }
+
+    @Override
+    public String toString(){
+        return "LocationEntity{" +
+                "deviceId='" + deviceId + '\'' +
+                ", latitude=" + latitude +
+                ", longitude=" + longitude +
+                ", timestamp=" + timestamp +
+                '}';
+
+    }
 }

@@ -2,13 +2,11 @@ package com.locationTracking.controller;
 
 import com.locationTracking.entities.LocationEntity;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/location")
+@CrossOrigin(origins = "*")
 public class LocationController {
 
     private final KafkaTemplate<String, LocationEntity> kafkaTemplate;

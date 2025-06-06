@@ -6,17 +6,72 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
 </head>
 <body>
-<div id="map" style="height: 400px;"></div>
+<h2>Live Location Tracking</h2>
+<div id="map" style="height: 400px; border: 1px solid black;">This is about Location</div>
+<br />
+<button onclick="sendLocation()">📍 Share My Location</button>
+
 <script>
-    var socket = new SockJS('http://localhost:8082/ws');
+    // STOMP connection
+    var socket = new SockJS('http://localhost:8081/ws');
     var stompClient = Stomp.over(socket);
+
     stompClient.connect({}, function(frame) {
+        console.log("Connected:", frame);
+
         stompClient.subscribe('/topic/locations', function(message) {
             var location = JSON.parse(message.body);
-            console.log('Received:', location);
-            // Update map or UI with location data
+            console.log('📥 Received:', location);
+
+            // Show location in UI
+            const mapDiv = document.getElementById("map");
+            mapDiv.innerHTML += `<p>
+                <strong>Device:</strong> ${location.deviceId} <br>
+                <strong>Latitude:</strong> ${location.latitude} <br>
+                <strong>Longitude:</strong> ${location.longitude} <br>
+                <strong>Timestamp:</strong> ${new Date(location.timestamp).toLocaleString()}
+            </p><hr>`;
         });
     });
+
+    // Function to get geolocation and send to backend
+    function sendLocation() {
+        if (!navigator.geolocation) {
+            alert("Geolocation is not supported by your browser");
+            return;
+        }
+
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const location = {
+                    deviceId: "device3", // Hardcoded for demo
+                    latitude: position.coords.latitude,
+                    longitude: position.coords.longitude,
+                    timestamp: new Date().toISOString()
+                };
+
+                console.log("📤 Sending location:", location);
+
+                fetch('http://localhost:8081/api/location', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(location)
+                })
+                .then(response => response.text())
+                .then(data => {
+                    console.log("✅ Server response:", data);
+                })
+                .catch(error => {
+                    console.error("❌ Error sending location:", error);
+                });
+            },
+            (error) => {
+                alert("Error getting location: " + error.message);
+            }
+        );
+    }
 </script>
 </body>
 </html>

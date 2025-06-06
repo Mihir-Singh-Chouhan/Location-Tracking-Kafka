@@ -26,6 +26,7 @@ public class LocationServiceImpl implements LocationService {
     @Override
     @KafkaListener(topics = "location-updates",groupId = "location-group")
     public void consume(LocationEntity locationEntity) {
+        System.out.println("Kafka message received: {}"+locationEntity);
         LocationEntity entity = new LocationEntity();
         entity.setDeviceId(locationEntity.getDeviceId());
         entity.setLatitude(locationEntity.getLatitude());
