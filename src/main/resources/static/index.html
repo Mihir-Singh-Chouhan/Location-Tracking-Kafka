@@ -1,56 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Live Location Tracking</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.6.1/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="stylesheet" href="index.css">
 </head>
 <body>
-<h2>Live Location Tracking</h2>
-<div id="map" style="height: 400px; border: 1px solid black;">This is about Location</div>
-<br />
-<button onclick="sendLocation()">📍 Share My Location</button>
+<div class="container">
+    <header>
+        <h1>Live Location Tracking</h1>
+        <p class="subtitle">Real-time location sharing and monitoring</p>
+    </header>
+
+    <div class="content">
+        <div class="map-section">
+            <div id="map">
+                <!-- Map will be rendered here -->
+            </div>
+            <button class="btn" onclick="sendLocation()">
+                <i class="fas fa-location-arrow"></i> Share My Location
+            </button>
+
+            <div id="connectionStatus" class="connection-status">
+                <i class="fas fa-spinner fa-spin"></i> Connecting to server...
+            </div>
+        </div>
+
+        <div class="locations-section">
+            <h3><i class="fas fa-history"></i> Location History</h3>
+            <div id="locationsContainer">
+                <p class="status">No locations received yet. Shared locations will appear here.</p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
     // STOMP connection
     var socket = new SockJS('http://localhost:8081/ws');
     var stompClient = Stomp.over(socket);
+    var connectionStatus = document.getElementById('connectionStatus');
 
     stompClient.connect({}, function(frame) {
-        console.log("Connected:", frame);
+        connectionStatus.innerHTML = '<i class="fas fa-check-circle"></i> Connected to live updates';
+        connectionStatus.classList.add('connected');
+        connectionStatus.classList.remove('disconnected');
 
         stompClient.subscribe('/topic/locations', function(message) {
             var location = JSON.parse(message.body);
-            console.log('📥 Received:', location);
-
-            // Show location in UI
-            const mapDiv = document.getElementById("map");
-            mapDiv.innerHTML += `<p>
-                <strong>Device:</strong> ${location.deviceId} <br>
-                <strong>Latitude:</strong> ${location.latitude} <br>
-                <strong>Longitude:</strong> ${location.longitude} <br>
-                <strong>Timestamp:</strong> ${new Date(location.timestamp).toLocaleString()}
-            </p><hr>`;
+            updateUI(location);
         });
+    }, function(error) {
+        connectionStatus.innerHTML = '<i class="fas fa-exclamation-circle"></i> Disconnected from server';
+        connectionStatus.classList.add('disconnected');
+        connectionStatus.classList.remove('connected');
     });
+
+    // Function to update UI with new location
+    function updateUI(location) {
+        const locationsContainer = document.getElementById("locationsContainer");
+
+        // Remove the "no locations" message if it exists
+        const statusElement = locationsContainer.querySelector('.status');
+        if (statusElement) {
+            locationsContainer.removeChild(statusElement);
+        }
+
+        // Create and append new location card
+        const locationCard = document.createElement('div');
+        locationCard.className = 'location-card';
+        locationCard.innerHTML = `
+            <div class="location-header">
+                <div class="device-id"><i class="fas fa-mobile-alt"></i> ${location.deviceId || 'Unknown Device'}</div>
+                <div class="timestamp">${new Date(location.timestamp).toLocaleString()}</div>
+            </div>
+            <div class="location-details">
+                <div class="detail">
+                    <strong>Latitude</strong>
+                    ${location.latitude}
+                </div>
+                <div class="detail">
+                    <strong>Longitude</strong>
+                    ${location.longitude}
+                </div>
+            </div>
+        `;
+
+        // Add to top of container
+        if (locationsContainer.firstChild) {
+            locationsContainer.insertBefore(locationCard, locationsContainer.firstChild);
+        } else {
+            locationsContainer.appendChild(locationCard);
+        }
+
+        // Update map (placeholder - in a real app you would use Google Maps or Leaflet here)
+        const mapDiv = document.getElementById("map");
+        mapDiv.innerHTML = `
+            <div style="width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                <i class="fas fa-map-marker-alt" style="font-size: 48px; color: var(--accent-color);"></i>
+                <p style="margin-top: 15px; text-align: center;">
+                    <strong>Latest Location:</strong><br>
+                    Latitude: ${location.latitude}<br>
+                    Longitude: ${location.longitude}
+                </p>
+            </div>
+        `;
+    }
 
     // Function to get geolocation and send to backend
     function sendLocation() {
+        const btn = document.querySelector('.btn');
+        const originalText = btn.innerHTML;
+
         if (!navigator.geolocation) {
             alert("Geolocation is not supported by your browser");
             return;
         }
 
+        // Show loading state
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Getting location...';
+        btn.disabled = true;
+
         navigator.geolocation.getCurrentPosition(
             (position) => {
                 const location = {
-                    deviceId: "device3", // Hardcoded for demo
+                    deviceId: "User Device", // Hardcoded for demo
                     latitude: position.coords.latitude,
                     longitude: position.coords.longitude,
                     timestamp: new Date().toISOString()
                 };
-
-                console.log("📤 Sending location:", location);
 
                 fetch('http://localhost:8081/api/location', {
                     method: 'POST',
@@ -61,14 +144,29 @@
                 })
                 .then(response => response.text())
                 .then(data => {
-                    console.log("✅ Server response:", data);
+                    console.log("Server response:", data);
+                    btn.innerHTML = '<i class="fas fa-check"></i> Location Shared!';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2000);
                 })
                 .catch(error => {
-                    console.error("❌ Error sending location:", error);
+                    console.error("Error sending location:", error);
+                    btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error';
+                    setTimeout(() => {
+                        btn.innerHTML = originalText;
+                        btn.disabled = false;
+                    }, 2000);
                 });
             },
             (error) => {
                 alert("Error getting location: " + error.message);
+                btn.innerHTML = '<i class="fas fa-exclamation-circle"></i> Error';
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.disabled = false;
+                }, 2000);
             }
         );
     }

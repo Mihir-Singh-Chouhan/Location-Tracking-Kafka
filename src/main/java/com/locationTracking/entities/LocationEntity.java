@@ -2,13 +2,14 @@ package com.locationTracking.entities;
 
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.util.Date;
 
 @Entity
+@Getter
+@Setter
+@ToString
 public class LocationEntity {
 
    @Id
@@ -27,46 +28,46 @@ public class LocationEntity {
         this.timestamp = timestamp;
     }
 
-    public String getDeviceId() {
-        return deviceId;
-    }
+//    public String getDeviceId() {
+//        return deviceId;
+//    }
+//
+//    public void setDeviceId(String deviceId) {
+//        this.deviceId = deviceId;
+//    }
+//
+//    public String getLongitude() {
+//        return longitude;
+//    }
+//
+//    public void setLongitude(String longitude) {
+//        this.longitude = longitude;
+//    }
+//
+//    public String getLatitude() {
+//        return latitude;
+//    }
+//
+//    public void setLatitude(String latitude) {
+//        this.latitude = latitude;
+//    }
+//
+//    public Date getTimestamp() {
+//        return timestamp;
+//    }
+//
+//    public void setTimestamp(Date timestamp) {
+//        this.timestamp = timestamp;
+//    }
 
-    public void setDeviceId(String deviceId) {
-        this.deviceId = deviceId;
-    }
-
-    public String getLongitude() {
-        return longitude;
-    }
-
-    public void setLongitude(String longitude) {
-        this.longitude = longitude;
-    }
-
-    public String getLatitude() {
-        return latitude;
-    }
-
-    public void setLatitude(String latitude) {
-        this.latitude = latitude;
-    }
-
-    public Date getTimestamp() {
-        return timestamp;
-    }
-
-    public void setTimestamp(Date timestamp) {
-        this.timestamp = timestamp;
-    }
-
-    @Override
-    public String toString(){
-        return "LocationEntity{" +
-                "deviceId='" + deviceId + '\'' +
-                ", latitude=" + latitude +
-                ", longitude=" + longitude +
-                ", timestamp=" + timestamp +
-                '}';
-
-    }
+//    @Override
+//    public String toString(){
+//        return "LocationEntity{" +
+//                "deviceId='" + deviceId + '\'' +
+//                ", latitude=" + latitude +
+//                ", longitude=" + longitude +
+//                ", timestamp=" + timestamp +
+//                '}';
+//
+//    }
 }
